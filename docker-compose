@@ -1,0 +1,150 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  JOSEIAS — Asistente Principal                                             ║
+# ║  Oracle 12 GB RAM / 100 GB Disco · 24/7                                   ║
+# ║  Dominio: joseias.alianed.com                                              ║
+# ╠══════════════════════════════════════════════════════════════════════════════╣
+# ║  CÓMO DESPLEGAR EN DOKPLOY:                                                ║
+# ║  1. Dokploy → Apps → New App → Docker Compose                              ║
+# ║  2. Pega este archivo en el editor                                          ║
+# ║  3. Ve a la pestaña "Environment" y crea estas variables:                  ║
+# ║                                                                             ║
+# ║     AUTH_USERNAME          → usuario del panel (ej: admin)                 ║
+# ║     AUTH_PASSWORD          → contraseña del panel (invéntala)              ║
+# ║     OPENCLAW_GATEWAY_TOKEN → corre: openssl rand -hex 32                   ║
+# ║     NVIDIA_API_KEY         → build.nvidia.com → API Keys                   ║
+# ║     TELEGRAM_BOT_TOKEN     → BotFather → /newbot → "JoseiasBot"            ║
+# ║                                                                             ║
+# ║  4. Ve a la pestaña "Domains" y agrega:                                    ║
+# ║     Domain: joseias.alianed.com  →  Port: 8080  →  HTTPS: ON              ║
+# ║     (El DNS ya apunta a Oracle via Cloudflare — no hay que tocarlo)        ║
+# ║                                                                             ║
+# ║  5. Deploy                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+services:
+
+  openclaw:
+    image: "coollabsio/openclaw:2026.2.6"
+    restart: unless-stopped
+
+    environment:
+
+      # ── ACCESO AL PANEL ──────────────────────────────────────────────────
+      - AUTH_USERNAME=${AUTH_USERNAME}
+      - AUTH_PASSWORD=${AUTH_PASSWORD}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+
+      # ── IDENTIDAD DEL AGENTE ─────────────────────────────────────────────
+      # Joseias: macro, vida + negocio + startup, Jarvis de AliaNed OS
+      - NEMOCLAW_SANDBOX_NAME=joseias-master
+      - NEMOCLAW_MODEL=nvidia/nemotron-3-super-120b-a12b
+      - NEMOCLAW_PROVIDER=cloud
+      - NEMOCLAW_NON_INTERACTIVE=1
+
+      # ── LLM — OPCIÓN A: NVIDIA DIRECTO ──────────────────────────────────
+      - OPENAI_API_KEY=${NVIDIA_API_KEY}
+      - OPENAI_BASE_URL=https://integrate.api.nvidia.com/v1
+      - OPENCLAW_PRIMARY_MODEL=nvidia/nemotron-3-super-120b-a12b
+
+      # ── TELEGRAM — BOT DE JOSEIAS (separado del de Tony) ────────────────
+      # Crear en BotFather: /newbot → nombre sugerido: "JoseiasBot"
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+
+      # ── OTRAS CLAVES (vacías por ahora) ──────────────────────────────────
+      - ANTHROPIC_API_KEY=
+      - OPENROUTER_API_KEY=
+      - GEMINI_API_KEY=AIzaSyBkp67Plud_jau3ip536nqRgMBk5SehBL0
+      - XAI_API_KEY=
+      - GROQ_API_KEY=
+      - MISTRAL_API_KEY=
+      - CEREBRAS_API_KEY=
+      - VENICE_API_KEY=
+      - MOONSHOT_API_KEY=
+      - KIMI_API_KEY=
+      - MINIMAX_API_KEY=
+      - ZAI_API_KEY=
+      - AI_GATEWAY_API_KEY=
+      - OPENCODE_API_KEY=
+      - SYNTHETIC_API_KEY=
+      - COPILOT_GITHUB_TOKEN=
+      - XIAOMI_API_KEY=
+      - DEEPGRAM_API_KEY=
+      - DISCORD_BOT_TOKEN=
+      - SLACK_BOT_TOKEN=
+      - SLACK_APP_TOKEN=
+      - WHATSAPP_ENABLED=false
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
+      - AWS_SESSION_TOKEN=
+      - AWS_REGION=us-east-1
+      - BEDROCK_PROVIDER_FILTER=anthropic
+      - OLLAMA_BASE_URL=
+
+      # ── CONFIG INTERNA — NO MODIFICAR ────────────────────────────────────
+      - PORT=8080
+      - OPENCLAW_GATEWAY_PORT=18789
+      - OPENCLAW_GATEWAY_BIND=loopback
+      - OPENCLAW_STATE_DIR=/data/.openclaw
+      - OPENCLAW_WORKSPACE_DIR=/data/workspace
+      - BROWSER_CDP_URL=http://browser:9223
+      - BROWSER_DEFAULT_PROFILE=openclaw
+      - BROWSER_EVALUATE_ENABLED=true
+      - BROWSER_SNAPSHOT_MODE=efficient
+      - BROWSER_REMOTE_TIMEOUT_MS=1500
+      - BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS=3000
+      - HOOKS_ENABLED=false
+      - HOOKS_PATH=/hooks
+      - MOONSHOT_BASE_URL=https://api.moonshot.ai/v1
+      - KIMI_BASE_URL=https://api.moonshot.ai/anthropic
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - joseias-data:/data
+
+    depends_on:
+      browser:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+        reservations:
+          memory: 1g
+
+  browser:
+    image: "coollabsio/openclaw-browser:latest"
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Santo_Domingo
+      - CHROME_CLI=--remote-debugging-port=9222
+    volumes:
+      - browser-data:/config
+    shm_size: 2g
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+        reservations:
+          memory: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/9222' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  joseias-data:
+    driver: local
+  browser-data:
+    driver: local
