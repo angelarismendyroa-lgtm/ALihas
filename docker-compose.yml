@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   openclaw:
     image: "coollabsio/openclaw:2026.2.6"
@@ -12,9 +11,8 @@ services:
       # ════════════════════════════════════════════════════════════════════
       - NEMOCLAW_SANDBOX_NAME=alianedos-core
       - NEMOCLAW_NON_INTERACTIVE=1
-      - NEMOCLAW_POLICY_MODE=custom
+      - NEMOCLAW_POLICY_MODE=strict # MODIFIED: Changed from custom to strict
       - NEMOCLAW_PROVIDER=nim
-      # Parametrizado para evitar obsolescencia del catálogo de NVIDIA
       - NEMOCLAW_MODEL=${NEMOCLAW_SECURITY_MODEL}
       - NVIDIA_API_KEY=${NVIDIA_API_KEY}
 
@@ -60,12 +58,14 @@ services:
       - BROWSER_REMOTE_TIMEOUT_MS=1500
       - BROWSER_REMOTE_HANDSHAKE_TIMEOUT_MS=3000
       - HOOKS_ENABLED=true
-      - HOOKS_TOKEN=${HOOKS_TOKEN}  # <-- Añade esta línea
+      - HOOKS_TOKEN=${HOOKS_TOKEN}
 
     ports:
       - "8080:8080"
     volumes:
       - joseias-data:/data
+      # ENRICHED: Montaje estricto de la política de sandboxing local a interna
+      - ./policies:/data/.openclaw/policies:ro
     depends_on:
       browser:
         condition: service_healthy

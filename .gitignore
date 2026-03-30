@@ -1,0 +1,12 @@
+# Entornos Locales y Secretos (PROHIBIDO SUBIR)
+.env
+.env.*
+!.env.example
+
+# Datos Persistentes de Docker (Bases de datos y perfiles)
+joseias-data/
+browser-data/
+
+# Caché y logs temporales
+*.log
+.DS_Store

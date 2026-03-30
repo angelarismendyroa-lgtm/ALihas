@@ -1,0 +1,62 @@
+# ALihas Strict Network Policy
+# Define reglas de tráfico explícito (Egress Firewall) para aislar por completo el agente original.
+
+version: "1.0"
+policy_name: "alihas-advanced-protection"
+mode: "strict"
+
+egress_rules:
+  allow_internal:
+    - host: "aliha-neurogestor"
+      port: 7437
+      protocol: "rest"
+
+  allow_llm_providers:
+    # OpenAI
+    - host: "api.openai.com"
+      port: 443
+    
+    # Gemini
+    - host: "generativelanguage.googleapis.com"
+      port: 443
+    
+    # MiniMax
+    - host: "api.minimax.chat"
+      port: 443
+
+    # OpenRouter
+    - host: "openrouter.ai"
+      port: 443
+
+    # Anthropic
+    - host: "api.anthropic.com"
+      port: 443
+
+    # Qwen/DashScope
+    - host: "dashscope.aliyuncs.com"
+      port: 443
+
+    # Groq
+    - host: "api.groq.com"
+      port: 443
+
+    # NVIDIA NIM Cloud
+    - host: "integrate.api.nvidia.com"
+      port: 443
+
+    # Moonshot
+    - host: "api.moonshot.cn"
+      port: 443
+
+    # Mistral
+    - host: "api.mistral.ai"
+      port: 443
+
+    # xAI
+    - host: "api.x.ai"
+      port: 443
+
+  allow_integrations:
+    # Telegram Bot API
+    - host: "api.telegram.org"
+      port: 443

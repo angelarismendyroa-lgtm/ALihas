@@ -1,0 +1,3 @@
+{
+  "customInstructions": "Estás trabajando en el repositorio protegido ALihas mediante políticas estrictas derivadas del SDK NVIDIA NemoClaw. Las reglas permitidas de firewall Egress están ubicadas en 'policies/openclaw-sandbox.yaml'. Bajo ninguna circunstancia debes modificar o borrar el Volumen 'joseias-data' en el docker-compose.yml sin la aprobación explícita del Arquitecto."
+}

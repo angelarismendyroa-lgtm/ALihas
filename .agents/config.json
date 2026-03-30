@@ -1,0 +1,6 @@
+{
+  "project_name": "ALihas",
+  "version": "2.0.0",
+  "telemetry": true,
+  "default_sandbox_mode": "strict"
+}
