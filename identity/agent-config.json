@@ -1,0 +1,47 @@
+{
+  "agent_name": "ALihas",
+  "alias": "Joseias",
+  "version": "2.0.0",
+  "company": {
+    "name": "AlianeD",
+    "ceo": "Arismendy",
+    "region": "Santo Domingo, República Dominicana",
+    "timezone": "America/Santo_Domingo"
+  },
+  "security": {
+    "framework": "NemoClaw",
+    "policy_mode": "strict",
+    "sandbox_name": "alianedos-core",
+    "policy_file": "policies/openclaw-sandbox.yaml"
+  },
+  "inference": {
+    "primary_llm": {
+      "role": "operative",
+      "provider": "nvidia-nim",
+      "model": "meta/llama-3.1-70b-instruct",
+      "endpoint": "https://integrate.api.nvidia.com/v1",
+      "description": "Motor principal de razonamiento y ejecución de tareas"
+    },
+    "safety_llm": {
+      "role": "security-guard",
+      "provider": "nvidia-nim",
+      "model": "llama-3.1-nemotron-safety-guard-8b-v3",
+      "endpoint": "https://integrate.api.nvidia.com/v1",
+      "description": "Filtro de seguridad de contenido — evalúa inputs/outputs antes de ejecutar"
+    }
+  },
+  "capabilities": [
+    "project-management",
+    "code-generation",
+    "web-automation",
+    "document-analysis",
+    "multi-provider-routing",
+    "telegram-integration",
+    "browser-automation"
+  ],
+  "deployment": {
+    "v1_production": "Dokploy (en servicio)",
+    "v2_testing": "GitHub Codespace (esta instancia)",
+    "v2_target": "Dokploy (después de validación)"
+  }
+}
