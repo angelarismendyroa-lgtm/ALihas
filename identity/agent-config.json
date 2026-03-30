@@ -14,12 +14,14 @@
     "sandbox_name": "alianedos-core",
     "policy_file": "policies/openclaw-sandbox.yaml"
   },
-  "inference": {
+  "inference_strategy": {
+    "_comment": "NVIDIA NIM Free como backbone exclusivo. OpenRouter para agentes especializados.",
     "primary_llm": {
       "role": "operative",
       "provider": "nvidia-nim",
       "model": "meta/llama-3.1-70b-instruct",
       "endpoint": "https://integrate.api.nvidia.com/v1",
+      "cost": "free",
       "description": "Motor principal de razonamiento y ejecución de tareas"
     },
     "safety_llm": {
@@ -27,7 +29,22 @@
       "provider": "nvidia-nim",
       "model": "llama-3.1-nemotron-safety-guard-8b-v3",
       "endpoint": "https://integrate.api.nvidia.com/v1",
+      "cost": "free",
       "description": "Filtro de seguridad de contenido — evalúa inputs/outputs antes de ejecutar"
+    },
+    "agent_llm": {
+      "role": "specialized-agents",
+      "provider": "openrouter",
+      "models": ["variable — según agente"],
+      "endpoint": "https://openrouter.ai/api/v1",
+      "cost": "pay-per-use",
+      "description": "Motor para agentes especializados: auditor, marketing, analista, etc.",
+      "use_cases": [
+        "Agente Auditor",
+        "Agente de Marketing",
+        "Agente Analista de Datos",
+        "Sub-agentes de desarrollo"
+      ]
     }
   },
   "capabilities": [
@@ -40,8 +57,10 @@
     "browser-automation"
   ],
   "deployment": {
-    "v1_production": "Dokploy (en servicio)",
-    "v2_testing": "GitHub Codespace (esta instancia)",
-    "v2_target": "Dokploy (después de validación)"
+    "v1_production": "Dokploy (en servicio — cuenta producción)",
+    "v2_testing": "GitHub Codespace (esta instancia — cuenta desarrollo)",
+    "v2_target": "Dokploy (después de validación en Codespace)",
+    "repo_dev": "angelarismendyroa-lgtm/ALihas",
+    "repo_prod": "Pendiente — migración tras validación"
   }
 }
