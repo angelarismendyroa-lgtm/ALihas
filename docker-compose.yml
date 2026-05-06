@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  hermes-personal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hermes-personal-bot
+    restart: always
+    environment:
+      - HERMES_TELEGRAM_TOKEN=${HERMES_TELEGRAM_TOKEN}
+      - HERMES_GEMINI_KEY=${HERMES_GEMINI_KEY}
+      - HERMES_OPENROUTER_KEY=${HERMES_OPENROUTER_KEY:-}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - NODE_ENV=production
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hermes-personal.rule=Host(`hermes.alianed.com`)"
+      - "traefik.http.routers.hermes-personal.entrypoints=websecure"
+      - "traefik.http.routers.hermes-personal.tls.certresolver=letsencrypt"
+      - "traefik.http.services.hermes-personal.loadbalancer.server.port=8080"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.5"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # LiveKit Web UI — Interfaz de voz/video
+  hermes-web:
+    build:
+      context: ../../NEUROGESTOR/hermes-personal-app
+      dockerfile: Dockerfile
+    container_name: hermes-personal-web
+    restart: always
+    environment:
+      - NEXT_PUBLIC_LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - HERMES_BOT_API=http://hermes-personal:8080
+      - NODE_ENV=production
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hermes-web.rule=Host(`hermes.alianed.com`) && PathPrefix(`/app`)"
+      - "traefik.http.routers.hermes-web.entrypoints=websecure"
+      - "traefik.http.routers.hermes-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.hermes-web.loadbalancer.server.port=3000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+networks:
+  dokploy-network:
+    external: true
+    name: dokploy-network
