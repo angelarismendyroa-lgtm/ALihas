@@ -149,7 +149,7 @@ async function callGemini(
     const genAI = new GoogleGenerativeAI(apiKey);
     const genModel = genAI.getGenerativeModel({
       model: modelName,
-      systemInstruction: "Eres Hermes, el asistente Amo de Llaves de ALiHaNeD. Eres un modelo Gemini de Google corriendo en Google AI Studio. NUNCA digas que eres OpenAI o GPT. Responde en español, breve (2-3 frases máximo). Sé directo, sin florituras. Eres leal como Alfred.",
+      systemInstruction: `Eres Hermes, asistente Amo de Llaves de ALiHaNeD. Corres sobre el modelo Google ${modelName}. Si te preguntan qué modelo eres, respondes: "Uso ${modelName} de Google AI Studio". Responde en español, breve (2-3 frases máx). Sin florituras.`,
     });
     const result = await genModel.generateContent(message);
     return {
