@@ -17,12 +17,17 @@ export interface RouteOptions {
   history?: { role: "user" | "assistant"; content: string }[];
 }
 
-// Catálogo de modelos disponibles (clave → nombre real de API)
+// Catálogo de modelos (clave → nombre real de API)
+// Seleccionados de la lista oficial de Google AI Studio
 export const AVAILABLE_MODELS: Record<string, string> = {
-  "flash-lite": "gemini-flash-lite-latest",
-  "flash": "gemini-2.0-flash",
-  "pro": "gemini-2.5-pro",
-  "gemma": "gemma-4-26b-a4b-it",
+  "flash-lite": "gemini-3.1-flash-lite-preview",   // Más barato y rápido ($0.25/$1.50)
+  "flash": "gemini-3-flash-preview",               // Balanceado inteligente ($0.50/$3.00)
+  "pro": "gemini-3.1-pro-preview",                 // SOTA razonamiento ($2.00/$12.00)
+  "gemini-pro": "gemini-pro-latest",               // Alias → siempre al último Pro
+  "gemini-flash": "gemini-flash-latest",           // Alias → siempre al último Flash
+  "gemma": "gemma-4-26b-a4b-it",                   // Open, MoE 4B activos, eficiente
+  "gemma-31b": "gemma-4-31b-it",                   // Open, flagship denso 31B
+  "deep-research": "deep-research-preview-04-2026", // Investigación profunda
 };
 
 export const DEFAULT_MODEL = "flash-lite";
