@@ -10,6 +10,7 @@
  */
 
 import "dotenv/config";
+import { createServer, IncomingMessage, ServerResponse } from "http";
 import { Bot, Context, session, SessionFlavor } from "grammy";
 import { routeMessage, type RoutedResponse } from "./agent-tor.js";
 import { searchZumo } from "./zumo.js";
@@ -114,7 +115,17 @@ bot.on("message:text", async (ctx) => {
   }
 });
 
-// Start
+// Health check HTTP server (para Dokploy/Traefik)
+const PORT = parseInt(process.env.PORT || "8080");
+const server = createServer((_req: IncomingMessage, res: ServerResponse) => {
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ status: "ok", service: "alihas-hermes", timestamp: new Date().toISOString() }));
+});
+server.listen(PORT, () => {
+  console.log(`[Health] HTTP server en puerto ${PORT}`);
+});
+
+// Start bot
 console.log("=== Hermes Personal (Alihas) — Telegram Bridge ===");
 console.log("Iniciando bot...");
 
