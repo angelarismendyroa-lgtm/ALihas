@@ -1,0 +1,22 @@
+{
+  "name": "alihas-telegram-bridge",
+  "version": "1.0.0",
+  "description": "Telegram bridge for Hermes Personal (Alihas) — Amo de Llaves",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "grammy": "^1.30.0",
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  }
+}
