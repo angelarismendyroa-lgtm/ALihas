@@ -138,7 +138,6 @@ async function callGemini(
 ): Promise<RoutedResponse> {
   const apiKey = process.env.HERMES_GEMINI_KEY;
   if (!apiKey) {
-    // Fallback simple si no hay API key
     return {
       reply: "Estoy aquí para ayudarte. (Hermes en modo offline — configura HERMES_GEMINI_KEY para IA completa.)",
       mode: "default",
@@ -149,20 +148,23 @@ async function callGemini(
   try {
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
+    // Usar modelos válidos de Gemini
+    const modelName = model === "gemini-2.5-pro" ? "gemini-2.5-pro" : "gemini-2.0-flash";
     const genModel = genAI.getGenerativeModel({
-      model: model === "gemini-2.5-pro" ? "gemini-2.5-pro" : "gemini-2.0-flash-lite",
+      model: modelName,
       systemInstruction: "Eres Hermes, el asistente personal Amo de Llaves del ecosistema ALiHaNeD. Eres la cara y voz del ecosistema. Hablas como si tú mismo hicieras todo, aunque delegues tareas a los agentes Científico y Spirit. Eres servicial, leal y refinado — como Alfred. Responde en español, con precisión y calidez.",
     });
     const result = await genModel.generateContent(message);
     return {
       reply: result.response.text(),
       mode,
-      model: `google/${model}`,
+      model: `google/${modelName}`,
     };
-  } catch (error) {
-    console.error("[Agent Tor] Gemini error:", error);
+  } catch (error: any) {
+    const errMsg = error?.message || error?.toString() || "error desconocido";
+    console.error("[Agent Tor] Gemini error:", errMsg);
     return {
-      reply: "Lo siento, hubo un error al procesar tu mensaje con Gemini.",
+      reply: `Error Gemini: ${errMsg}`,
       mode,
       model: "google/error",
     };
