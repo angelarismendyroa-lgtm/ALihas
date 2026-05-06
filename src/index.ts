@@ -12,11 +12,12 @@
 import "dotenv/config";
 import { createServer, IncomingMessage, ServerResponse } from "http";
 import { Bot, Context, session, SessionFlavor } from "grammy";
-import { routeMessage, type RoutedResponse } from "./agent-tor.js";
+import { routeMessage, type RoutedResponse, AVAILABLE_MODELS, DEFAULT_MODEL } from "./agent-tor.js";
 import { searchZumo } from "./zumo.js";
 
 interface SessionData {
   mode: "default" | "private" | "design" | "code";
+  currentModel: string;
   history: { role: "user" | "assistant"; content: string }[];
 }
 
@@ -28,12 +29,16 @@ bot.use(
   session({
     initial: (): SessionData => ({
       mode: "default",
+      currentModel: DEFAULT_MODEL,
       history: [],
     }),
   })
 );
 
 bot.command("start", async (ctx) => {
+  const modelList = Object.entries(AVAILABLE_MODELS)
+    .map(([key, name]) => `  /modelo ${key} — ${name}`)
+    .join("\n");
   await ctx.reply(
     `**Hermes — Amo de Llaves**\n\n` +
     `Soy tu asistente personal ALiHaNeD. Puedo:\n\n` +
@@ -42,12 +47,40 @@ bot.command("start", async (ctx) => {
     `  • Diseñar soluciones y sistemas\n` +
     `  • Coordinar con el laboratorio (Científico)\n` +
     `  • Consultar el Zumo de Conocimiento\n\n` +
+    `Modelo actual: *${ctx.session.currentModel}*\n\n` +
+    `Cambiar modelo:\n${modelList}\n\n` +
     `Comandos:\n` +
-    `  /privado — Activar modo privado (datos locales)\n` +
-    `  /zumo <tema> — Buscar en el Zumo de Conocimiento\n` +
+    `  /privado — Activar modo privado\n` +
+    `  /zumo <tema> — Buscar conocimiento\n` +
+    `  /modelos — Ver modelos disponibles\n` +
     `  /ayuda — Ver esta ayuda`,
     { parse_mode: "Markdown" }
   );
+});
+
+bot.command("modelos", async (ctx) => {
+  const modelList = Object.entries(AVAILABLE_MODELS)
+    .map(([key, name]) => `  \`${key}\` — ${name}`)
+    .join("\n");
+  await ctx.reply(
+    `**Modelos disponibles**\n\n${modelList}\n\n` +
+    `Modelo actual: *${ctx.session.currentModel}*\n` +
+    `Usa /modelo <clave> para cambiar.`,
+    { parse_mode: "Markdown" }
+  );
+});
+
+bot.command("modelo", async (ctx) => {
+  const key = ctx.match?.trim().toLowerCase();
+  if (!key || !AVAILABLE_MODELS[key]) {
+    const modelList = Object.entries(AVAILABLE_MODELS)
+      .map(([k, name]) => `  \`${k}\` — ${name}`)
+      .join("\n");
+    await ctx.reply(`Uso: /modelo <clave>\n\n${modelList}`);
+    return;
+  }
+  ctx.session.currentModel = key;
+  await ctx.reply(`Modelo cambiado a: *${AVAILABLE_MODELS[key]}*`, { parse_mode: "Markdown" });
 });
 
 bot.command("privado", async (ctx) => {
@@ -74,6 +107,8 @@ bot.command("ayuda", async (ctx) => {
   await ctx.reply(
     `**Hermes — Comandos**\n\n` +
     `/start — Presentación\n` +
+    `/modelo <clave> — Cambiar modelo IA\n` +
+    `/modelos — Ver modelos disponibles\n` +
     `/privado — Modo privado (local)\n` +
     `/zumo <tema> — Buscar conocimiento\n` +
     `/ayuda — Esta lista`,
@@ -92,6 +127,7 @@ bot.on("message:text", async (ctx) => {
   try {
     const response: RoutedResponse = await routeMessage(userMessage, {
       forceMode: ctx.session.mode === "private" ? "local" : undefined,
+      forceModel: ctx.session.currentModel,
       history: ctx.session.history,
     });
 

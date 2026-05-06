@@ -1,11 +1,8 @@
 /**
  * Agent Tor — Model Router para Hermes Personal
  *
- * Decide qué modelo usar según el contenido del mensaje:
- *   - Patrones de privacidad → modelo local (Ollama Qwen 3 2B)
- *   - Patrones de diseño → Gemini 2.5 Pro
- *   - Patrones de código → Claude Sonnet 4 (OpenRouter)
- *   - Chat general → Gemini 2.0 Flash Lite (default)
+ * Catálogo de modelos Gemini disponibles vía API de Google.
+ * El usuario puede cambiar de modelo con /modelo <clave>.
  */
 
 export interface RoutedResponse {
@@ -16,7 +13,22 @@ export interface RoutedResponse {
 
 export interface RouteOptions {
   forceMode?: "local";
+  forceModel?: string;
   history?: { role: "user" | "assistant"; content: string }[];
+}
+
+// Catálogo de modelos disponibles (clave → nombre real de API)
+export const AVAILABLE_MODELS: Record<string, string> = {
+  "flash-lite": "gemini-flash-lite-latest",
+  "flash": "gemini-2.0-flash",
+  "pro": "gemini-2.5-pro",
+  "gemma": "gemma-4-26b-a4b-it",
+};
+
+export const DEFAULT_MODEL = "flash-lite";
+
+function resolveModel(key: string): string {
+  return AVAILABLE_MODELS[key] || AVAILABLE_MODELS[DEFAULT_MODEL];
 }
 
 // Patrones para clasificar la intención
@@ -30,7 +42,6 @@ function classifyIntent(message: string): "local" | "design" | "code" | "default
   const privateScore = countMatches(message, PATTERNS.private);
   const designScore = countMatches(message, PATTERNS.design);
   const codeScore = countMatches(message, PATTERNS.code);
-
   if (privateScore >= 2) return "local";
   if (designScore >= 2 && designScore > codeScore) return "design";
   if (codeScore >= 2) return "code";
@@ -51,11 +62,11 @@ export async function routeMessage(
     case "local":
       return routeLocal(message, options);
     case "design":
-      return routeGeminiPro(message, options);
+      return callGemini(message, options.forceModel || "pro", "design");
     case "code":
       return routeCode(message, options);
     default:
-      return routeDefault(message, options);
+      return callGemini(message, options.forceModel || DEFAULT_MODEL, "default");
   }
 }
 
@@ -63,37 +74,27 @@ async function routeLocal(
   message: string,
   options: RouteOptions
 ): Promise<RoutedResponse> {
-  // Usa Ollama local para datos privados
   try {
     const response = await fetch("http://localhost:11434/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "qwen3:2b",
-        prompt: `Eres Hermes, el asistente personal de confianza. Esta conversación es PRIVADA. Responde de forma útil y segura:\n\n${message}`,
+        prompt: `Eres Hermes, el asistente personal de confianza. Esta conversacion es PRIVADA. Responde de forma util y segura:\n\n${message}`,
         stream: false,
       }),
     });
     const data = await response.json() as { response: string };
     return { reply: data.response, mode: "local", model: "ollama/qwen3:2b" };
   } catch {
-    // Fallback a Gemini si Ollama no está disponible
-    return routeDefault(message, options);
+    return callGemini(message, options.forceModel || DEFAULT_MODEL, "default");
   }
-}
-
-async function routeGeminiPro(
-  message: string,
-  options: RouteOptions
-): Promise<RoutedResponse> {
-  return callGemini(message, "gemini-2.5-pro", "design");
 }
 
 async function routeCode(
   message: string,
   options: RouteOptions
 ): Promise<RoutedResponse> {
-  // Intenta OpenRouter con Claude, fallback a Gemini
   const openRouterKey = process.env.HERMES_OPENROUTER_KEY;
   if (openRouterKey) {
     try {
@@ -106,7 +107,7 @@ async function routeCode(
         body: JSON.stringify({
           model: "anthropic/claude-sonnet-4",
           messages: [
-            { role: "system", content: "Eres Hermes, asistente personal y arquitecto técnico de ALiHaNeD. Responde con precisión técnica." },
+            { role: "system", content: "Eres Hermes, asistente personal y arquitecto tecnico de ALiHaNeD. Responde con precision tecnica." },
             { role: "user", content: message },
           ],
         }),
@@ -117,42 +118,33 @@ async function routeCode(
         mode: "code",
         model: "openrouter/claude-sonnet-4",
       };
-    } catch {
-      // fallback
-    }
+    } catch { /* fallback */ }
   }
-  return callGemini(message, "gemini-2.0-flash-lite", "code");
-}
-
-async function routeDefault(
-  message: string,
-  options: RouteOptions
-): Promise<RoutedResponse> {
-  return callGemini(message, "gemini-2.0-flash-lite", "default");
+  return callGemini(message, options.forceModel || DEFAULT_MODEL, "code");
 }
 
 async function callGemini(
   message: string,
-  model: string,
+  modelKey: string,
   mode: RoutedResponse["mode"]
 ): Promise<RoutedResponse> {
   const apiKey = process.env.HERMES_GEMINI_KEY;
   if (!apiKey) {
     return {
-      reply: "Estoy aquí para ayudarte. (Hermes en modo offline — configura HERMES_GEMINI_KEY para IA completa.)",
+      reply: "Estoy aqui para ayudarte. (Hermes en modo offline — configura HERMES_GEMINI_KEY para IA completa.)",
       mode: "default",
       model: "none",
     };
   }
 
+  const modelName = resolveModel(modelKey);
+
   try {
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Usar modelos válidos de Gemini
-    const modelName = model === "gemini-2.5-pro" ? "gemini-2.5-pro" : "gemma-4-31b-it";
     const genModel = genAI.getGenerativeModel({
       model: modelName,
-      systemInstruction: "Eres Hermes, el asistente personal Amo de Llaves del ecosistema ALiHaNeD. Eres la cara y voz del ecosistema. Hablas como si tú mismo hicieras todo, aunque delegues tareas a los agentes Científico y Spirit. Eres servicial, leal y refinado — como Alfred. Responde en español, con precisión y calidez.",
+      systemInstruction: "Eres Hermes, el asistente personal Amo de Llaves del ecosistema ALiHaNeD. Eres la cara y voz del ecosistema. Hablas como si tu mismo hicieras todo, aunque delegues tareas a los agentes Cientifico y Spirit. Eres servicial, leal y refinado — como Alfred. Responde en espanol, con precision y calidez.",
     });
     const result = await genModel.generateContent(message);
     return {
@@ -162,11 +154,11 @@ async function callGemini(
     };
   } catch (error: any) {
     const errMsg = error?.message || error?.toString() || "error desconocido";
-    console.error("[Agent Tor] Gemini error:", errMsg);
+    console.error("[Agent Tor] error:", errMsg);
     return {
-      reply: `Error Gemini: ${errMsg}`,
+      reply: `Error: ${errMsg}`,
       mode,
-      model: "google/error",
+      model: "error",
     };
   }
 }
