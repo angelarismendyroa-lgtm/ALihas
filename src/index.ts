@@ -39,6 +39,7 @@ bot.command("start", async (ctx) => {
   const modelList = Object.entries(AVAILABLE_MODELS)
     .map(([key, name]) => `  /modelo ${key} — ${name}`)
     .join("\n");
+  const modelName = AVAILABLE_MODELS[ctx.session.currentModel] || "gemini-flash-lite-latest";
   await ctx.reply(
     `**Hermes — Amo de Llaves**\n\n` +
     `Soy tu asistente personal ALiHaNeD. Puedo:\n\n` +
@@ -47,13 +48,12 @@ bot.command("start", async (ctx) => {
     `  • Diseñar soluciones y sistemas\n` +
     `  • Coordinar con el laboratorio (Científico)\n` +
     `  • Consultar el Zumo de Conocimiento\n\n` +
-    `Modelo actual: *${ctx.session.currentModel}*\n\n` +
-    `Cambiar modelo:\n${modelList}\n\n` +
-    `Comandos:\n` +
-    `  /privado — Activar modo privado\n` +
+    `Estoy vestido de: *${modelName}*\n\n` +
+    `Mi closet:\n${modelList}\n\n` +
+    `  /vestir <clave> — Cambiarme de traje\n` +
+    `  /privado — Modo privado\n` +
     `  /zumo <tema> — Buscar conocimiento\n` +
-    `  /modelos — Ver modelos disponibles\n` +
-    `  /ayuda — Ver esta ayuda`,
+    `  /ayuda — Ver ayuda`,
     { parse_mode: "Markdown" }
   );
 });
@@ -70,17 +70,31 @@ bot.command("modelos", async (ctx) => {
   );
 });
 
-bot.command("modelo", async (ctx) => {
+bot.command("vestir", async (ctx) => {
   const key = ctx.match?.trim().toLowerCase();
   if (!key || !AVAILABLE_MODELS[key]) {
-    const modelList = Object.entries(AVAILABLE_MODELS)
+    const closet = Object.entries(AVAILABLE_MODELS)
       .map(([k, name]) => `  \`${k}\` — ${name}`)
       .join("\n");
-    await ctx.reply(`Uso: /modelo <clave>\n\n${modelList}`);
+    await ctx.reply(`**Closet de modelos**\n\n${closet}\n\nUsa /vestir <clave> para cambiarte de traje.`);
     return;
   }
   ctx.session.currentModel = key;
-  await ctx.reply(`Modelo cambiado a: *${AVAILABLE_MODELS[key]}*`, { parse_mode: "Markdown" });
+  await ctx.reply(`Me he vestido de *${AVAILABLE_MODELS[key]}*.\nA tu servicio con este traje.`, { parse_mode: "Markdown" });
+});
+
+bot.command("modelo", async (ctx) => {
+  // Alias de /vestir
+  const key = ctx.match?.trim().toLowerCase();
+  if (!key || !AVAILABLE_MODELS[key]) {
+    const closet = Object.entries(AVAILABLE_MODELS)
+      .map(([k, name]) => `  \`${k}\` — ${name}`)
+      .join("\n");
+    await ctx.reply(`**Closet de modelos**\n\n${closet}\n\nModelo actual: *${AVAILABLE_MODELS[ctx.session.currentModel]}*\nUsa /vestir <clave> para cambiarlo.`);
+    return;
+  }
+  ctx.session.currentModel = key;
+  await ctx.reply(`Me he vestido de *${AVAILABLE_MODELS[key]}*.`, { parse_mode: "Markdown" });
 });
 
 bot.command("privado", async (ctx) => {
