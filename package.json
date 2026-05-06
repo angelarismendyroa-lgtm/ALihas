@@ -1,7 +1,7 @@
 {
   "name": "alihas-telegram-bridge",
   "version": "1.0.0",
-  "description": "Telegram bridge for Hermes Personal (Alihas) — Amo de Llaves",
+  "description": "AliHas — Amo de Llaves Assistant. Telegram bridge para el ecosistema ALiHaNeD.",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
