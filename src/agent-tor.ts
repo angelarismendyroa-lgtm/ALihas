@@ -149,7 +149,7 @@ async function callGemini(
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const genAI = new GoogleGenerativeAI(apiKey);
     // Usar modelos válidos de Gemini
-    const modelName = model === "gemini-2.5-pro" ? "gemini-2.5-pro" : "gemini-2.0-flash";
+    const modelName = model === "gemini-2.5-pro" ? "gemini-2.5-pro" : "gemma-4-31b-it";
     const genModel = genAI.getGenerativeModel({
       model: modelName,
       systemInstruction: "Eres Hermes, el asistente personal Amo de Llaves del ecosistema ALiHaNeD. Eres la cara y voz del ecosistema. Hablas como si tú mismo hicieras todo, aunque delegues tareas a los agentes Científico y Spirit. Eres servicial, leal y refinado — como Alfred. Responde en español, con precisión y calidez.",
